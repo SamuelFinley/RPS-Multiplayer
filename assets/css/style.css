@@ -39,6 +39,13 @@
     margin: auto;
 }
 
+#btn0 {
+    color: maroon;
+    font-family: "air";
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
 #btn1 {
     background-image: url("../images/pic2.png");
     border-style: ridge;
@@ -106,6 +113,7 @@
     width: 50%;
     height: 50%;
     flex-direction: column;
+    background-color: antiquewhite;
     border-color: black;
     border-width: thick;
     border-style: outset;
@@ -121,7 +129,37 @@
 #btn-container > h1 {
     display: none;
 }
+
+#footer {
+    position: absolute;
+    top: 80%;
+    width: 100%;
+    text-align: center;
+    font-size: 2em;
+    color: maroon;
+    font-family: "air";
+    font-weight: bold;
+    letter-spacing: .1em;
+    text-shadow: 
+      0 -1px 0 #fff, 
+      0 1px 0 #2e2e2e, 
+      0 2px 0 #2c2c2c, 
+      0 3px 0 #2a2a2a, 
+      0 4px 0 #282828, 
+      0 5px 0 #262626, 
+      0 6px 0 #242424, 
+      0 7px 0 #222, 
+      0 8px 0 #202020, 
+      0 9px 0 #1e1e1e, 
+      0 22px 30px rgba(0, 0, 0, 0.9);
+}
+
 @font-face {
     font-family: one;
     src: url("CarterOne.ttf");
+}
+
+@font-face {
+    font-family: air;
+    src: url("Air Americana.ttf");
 }

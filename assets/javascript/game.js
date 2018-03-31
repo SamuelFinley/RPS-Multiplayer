@@ -17,33 +17,14 @@ $(document).ready(() => {
     oppt: ''
   }
 
+  let win = 0;
+  let loss = 0;
+
   firebase.initializeApp(config);
   
-  
-  // Create a variable to reference the database
+
   let database = firebase.database();
     
-  // const setDatabase = ({id = '', username = '', password = ''}) => {
-  //   database.ref().set({
-  //     name: name,
-  //     email: email,
-  //     age: age,
-  //     comment: comment
-  //   }).then(() => {
-  //     $("#name-display").text(name);
-  //     $("#email-display").text(email);
-  //     $("#age-display").text(age);
-  //     $("#comment-display").text(comment);
-  //   }).catch((err) => {
-  //     console.log(`Error setting db values -- ${err}`);
-  //   });
-  // };
-  // function checkIfUserExists(userId) {
-  //   var usersRef = new Firebase(USERS_LOCATION);
-  //   usersRef.child(userId).once('value', function(snapshot) {
-  //     var exists = (snapshot.val() !== null);
-  //     userExistsCallback(userId, exists);
-  //   });
   function start () {
     $('#btn0').css('display', 'none');
     $('#btn-container').css('display', 'none');
@@ -53,7 +34,7 @@ $(document).ready(() => {
   window.onload = start ();
 
   function findGame (userId) {
-    let ref = database.ref('users')
+    let ref = database.ref('users');
     let userRef = database.ref('users/' + userId);
     userRef.update({
       isWaiting: true
@@ -87,26 +68,23 @@ $(document).ready(() => {
         });
       } console.log(theyWait.isWaiting)
       if (theyWait.Id === userId && !theyWait.isWaiting && theyWait.inGame && !gameObj.player) {
-        console.log('here')
-        $('#btn-container > h1').html('connected!<br>Make your Pick!')
+        console.log('here');
+        $('#btn-container > h1').html('connected!<br>Make your Pick!');
         $('#btn-container > h1').css('display', 'block');
         $('#btn0').css('display', 'none');
-        $('#btn1, #btn2, #btn3').prop('disabled', false)
+        $('#btn1, #btn2, #btn3').prop('disabled', false);
         gameObj.player = 'player2';
         gameObj.oppt = 'player1';
       }
   });
   }
 
-  // function game (
-
-  // )
 
   function setUserData(name) {
     let userRef = database.ref('users').push();
     gameObj.username = name;
     gameObj.userId = userRef.key;
-    console.log(name)
+    console.log(name);
     userRef.set({
       Id: userRef.key,
       isWaiting: false,
@@ -121,7 +99,7 @@ $(document).ready(() => {
 
   function setGameData(player1, player2) {
     let gameRef = database.ref('game').push();
-    gameObj.gId = gameRef.key
+    gameObj.gId = gameRef.key;
     gameRef.set({
       Id: gameRef.key,
       win: '',
@@ -137,37 +115,29 @@ $(document).ready(() => {
         response: ''
       }
     });
-    // let userRef = database.ref('users');
-    // userRef.child(player1).update({
-    //   game: gameRef.key
-    // });
-    // userRef.child(player2).update({
-    //   game: gameRef.key
-    // });
   }
 
   function turn(choice) {
-    //let path = 'game/' + gameId + '/turn/' + turnId;
-    //updates['game/' + gameId + '/turn/' + turnId] = turnData;
-    console.log(choice)
+    console.log(choice);
     let ref = database.ref('users/' + gameObj.userId);
     ref.once("value", function(data) {
-      console.log(data.val().game)
+      console.log(data.val().game);
       gameObj.gId = data.val().game
     });
     let ref2 = database.ref('game/' + gameObj.gId);
     ref2.child(gameObj.player).update({
       choice: choice
     });
-    console.log(gameObj.oppt)
+    console.log(gameObj.oppt);
     ref2.child(gameObj.oppt).once("value", function(data) {
-      console.log(data.val())
+      console.log(data.val());
       if (data.val().choice) {
         game(choice, data.val().choice);
       }
     })
-    ref2.child(gameObj.player).once("value", function(data) {
-      $('#btn-container > h1').html(data.val().response);
+    ref2.child(gameObj.player).on("child_changed", function(data) {
+      console.log(data.val());
+      $('#btn-container > h1').html(data.val());
     })
   }
 
@@ -175,17 +145,18 @@ $(document).ready(() => {
     let gref = database.ref('game/' + gameObj.gId);
     let ref = database.ref('users/');
     let name = '';
-    console.log('win')
-    //ref.child(gameObj.oppt).once("value", function(data) {
+    console.log('win');
     gref.child(gameObj.oppt).once("value", function(data) {
-      name = data.val().ID
-      console.log(data.val().ID)
-    // gref.child('win').on("child_changed", function(snapshot) {
-    //   console.log('win')
-    // })
+      name = data.val().ID;
+      console.log(data.val().ID);
       switch (true) {
         case ((choice === 'rock') && (choice2 === 'rock')) : 
-          $('#btn-container > h1').html('You tied!');
+        gref.child(gameObj.player).update({
+          response: 'You Tied!'
+        });
+        gref.child(gameObj.oppt).update({
+          response: 'You Tied!'
+        });
           break;
         case ((choice === 'rock') && (choice2 === 'paper')) : 
         $('#btn-container > h1').html('You Lose!');
@@ -214,6 +185,12 @@ $(document).ready(() => {
         });
           break;
         case ((choice === 'paper') && (choice2 === 'paper')) : 
+        gref.child(gameObj.player).update({
+          response: 'You Tied!'
+        });
+        gref.child(gameObj.oppt).update({
+          response: 'You Tied!'
+        });
         break;
         case ((choice === 'paper') && (choice2 === 'scissors')) : 
         gref.child(gameObj.player).update({
@@ -241,6 +218,12 @@ $(document).ready(() => {
         });
           break;
         case ((choice === 'scissors') && (choice2 === 'scissors')) : 
+        gref.child(gameObj.player).update({
+          response: 'You Tied!'
+        });
+        gref.child(gameObj.oppt).update({
+          response: 'You Tied!'
+        });
         break;
         }
       });
@@ -249,14 +232,13 @@ $(document).ready(() => {
   
   $('#btn1, #btn2, #btn3').click(function () {
     let choice = $(this).attr('name');
-    $('#btn1, #btn2, #btn3').prop('disabled', true)
+    $('#btn1, #btn2, #btn3').prop('disabled', true);
     turn(choice);
     
   })
 
   $('#btn0').click(() => {
     console.log('clicked')
-    //$('#btn0').prop('disabled', false);
     findGame(gameObj.userId);
   })
 
@@ -269,38 +251,5 @@ $(document).ready(() => {
     console.log(name)
     setUserData(name);
     });
-
-
-
-//   function win () {
-//     if (correct == big) {
-//       won +=1
-//       window.localStorage.setItem('won', won)
-//       $('#wins').html('wins: ' + won)
-//       $('#hal').html("H.A.L 9000: <br>" + halStuff[halStuff.length-1])
-//     }
-//   }
-
-//   document.onkeyup = (event) => {
-//     if (guess > 0) {
-//     letter = String.fromCharCode(event.which).toLowerCase();
-//     reg = new RegExp(letter,"i");
-//       if (!letters.includes(letter)) {
-//         letters = letters + letter + ' ';
-//         $('#letters').html('[ ' + letters + ']')
-//         hal (reg.test(word));
-//         while (reg.test(word)) {
-//           indx = (word.search(reg) + 1) * 2 - 1;
-//           blanks= blanks.substring(0, indx) + letter + blanks.substring(indx + 1);
-//           word = word.replace(reg, '_')
-//           correct += 1
-//         }
-//         win ();
-//     $('#word').html(blanks)
-//   }}
-// }
-
-  // $('#begin').click(nGame)
-
 })
   
