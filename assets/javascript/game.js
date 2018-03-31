@@ -14,7 +14,8 @@ $(document).ready(() => {
     username: '',
     userId: '',
     player: '',
-    oppt: ''
+    oppt: '',
+    inGame: '',
   }
 
   let win = 0;
@@ -42,9 +43,9 @@ $(document).ready(() => {
     let ordering = ref.orderByChild("isWaiting");
     ordering.on("child_changed", function(snapshot) {
       const theyWait = snapshot.val();
+      console.log(theyWait);
       if (theyWait.isWaiting && theyWait.Id !== userId) {
         let p2Ref = database.ref('users/' + theyWait.Id);
-        console.log(theyWait);
         setGameData(userId, theyWait.Id);
         $('#btn0').css('display', 'none');
         $('#btn1, #btn2, #btn3').prop('disabled', false)
@@ -66,7 +67,7 @@ $(document).ready(() => {
         }).catch((err) => {
           console.log(`Error setting db values -- ${err}`);
         });
-      } console.log(theyWait.isWaiting)
+      }
       if (theyWait.Id === userId && !theyWait.isWaiting && theyWait.inGame && !gameObj.player) {
         console.log('here');
         $('#btn-container > h1').html('connected!<br>Make your Pick!');
@@ -119,6 +120,7 @@ $(document).ready(() => {
 
   function turn(choice) {
     console.log(choice);
+    $('#btn-container > h1').html(choice);
     let ref = database.ref('users/' + gameObj.userId);
     ref.once("value", function(data) {
       console.log(data.val().game);
@@ -138,7 +140,23 @@ $(document).ready(() => {
     ref2.child(gameObj.player).on("child_changed", function(data) {
       console.log(data.val());
       $('#btn-container > h1').html(data.val());
+      condits (data.val());
     })
+  }
+
+  function condits (data) {
+    switch (true) {
+      case (data === 'You Win!') :
+      win++
+      $('#footer').html('wins: ' + win + '    Losses: ' + loss);
+      break;
+      case (data === 'You Lose!') :
+      loss++
+      $('#footer').html('wins: ' + win + '    Losses: ' + loss);
+      break;
+      case (data === 'You Tied!') :
+      break;
+    }
   }
 
   function game (choice, choice2) {
@@ -238,7 +256,9 @@ $(document).ready(() => {
   })
 
   $('#btn0').click(() => {
-    console.log('clicked')
+    $('#btn0').css('display', 'none');
+    $('#btn-container').css('display', '-webkit-flex');
+    $('#btn-container > h1').html('Finding Match...');
     findGame(gameObj.userId);
   })
 
