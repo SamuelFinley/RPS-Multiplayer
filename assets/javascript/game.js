@@ -30,6 +30,7 @@ $(document).ready(() => {
     $('#btn0').css('display', 'none');
     $('#btn-container').css('display', 'none');
     $('#btn1, #btn2, #btn3').prop('disabled', true);
+    $('#btn1, #btn2, #btn3').css('display', 'none');
   }
 
   window.onload = start ();
@@ -57,7 +58,6 @@ $(document).ready(() => {
     let ordering = ref.orderByChild("isWaiting");
     ordering.once("child_changed", function(snapshot) {
       const theyWait = snapshot.val();
-      //console.log(theyWait);
       if (theyWait.isWaiting && theyWait.Id !== userId && !theyWait.inGame) {
         let p2Ref = database.ref('users/' + theyWait.Id);
         setGameData(userId, theyWait.Id);
@@ -84,8 +84,6 @@ $(document).ready(() => {
       }
   });
   userRef.on("child_changed", function(snapshot) {
-      console.log(snapshot.val());
-      console.log(gameObj.oppt);
       if (!snapshot.val() && gameObj.oppt !== 'player2' && matchmaking) {
         $('#btn-container > h1').html('connected!<br>Make your Pick!');
         $('#btn-container > h1').css('display', 'block');
@@ -93,7 +91,6 @@ $(document).ready(() => {
         $('#btn1, #btn2, #btn3').prop('disabled', false);
         gameObj.player = 'player2';
         gameObj.oppt = 'player1';
-        //userRef.off();
       }
 
     });
@@ -104,7 +101,6 @@ $(document).ready(() => {
     let userRef = database.ref('users').push();
     gameObj.username = name;
     gameObj.userId = userRef.key;
-    console.log(name);
     userRef.set({
       Id: userRef.key,
       isWaiting: false,
@@ -137,27 +133,21 @@ $(document).ready(() => {
   }
 
   function turn(choice) {
-    console.log(choice);
     $('#btn-container > h1').html(choice);
     let ref = database.ref('users/' + gameObj.userId);
     ref.once("value", function(data) {
-      console.log(data.val().game);
       gameObj.gId = data.val().game
     });
     let ref2 = database.ref('game/' + gameObj.gId);
     ref2.child(gameObj.player).update({
       choice: choice
     });
-    console.log(gameObj.oppt);
     ref2.child(gameObj.oppt).once("value", function(data) {
-      console.log(data.val());
       if (data.val().choice) {
         game(choice, data.val().choice);
       }
     })
-    console.log(gameObj.player);
     ref2.child(gameObj.player).on("child_changed", function(data) {
-      console.log(data.val());
       $('#btn-container > h1').html(data.val());
       condits (data.val());
     })
@@ -188,10 +178,8 @@ $(document).ready(() => {
     let gref = database.ref('game/' + gameObj.gId);
     let ref = database.ref('users/');
     let name = '';
-    console.log('win');
     gref.child(gameObj.oppt).once("value", function(data) {
       name = data.val().ID;
-      console.log(data.val().ID);
       switch (true) {
         case ((choice === 'rock') && (choice2 === 'rock')) : 
         gref.child(gameObj.player).update({
@@ -244,7 +232,6 @@ $(document).ready(() => {
         });
           break;
         case ((choice === 'scissors') && (choice2 === 'rock')) : 
-        console.log(name)
         gref.child(gameObj.player).update({
           response: 'You Lose!'
         });
@@ -276,15 +263,17 @@ $(document).ready(() => {
   $('#btn1, #btn2, #btn3').click(function () {
     let choice = $(this).attr('name');
     $('#btn1, #btn2, #btn3').prop('disabled', true);
+    $('#btn1, #btn2, #btn3').css('display', 'none');
+    $(this).css('display', 'flex');
     turn(choice);
     
   })
 
   $('#btn0').click(() => {
     $('#btn0').css('display', 'none');
-    //$('#btn-container').css('display', '-webkit-flex');
     $('#btn-container > h1').html('Finding Match...');
     $('#btn-container > h1').css('display', 'block');
+    $('#btn1, #btn2, #btn3').css('display', 'flex');
     matchmaking = true;
     findGame(gameObj.userId);
   })
@@ -295,7 +284,6 @@ $(document).ready(() => {
     $('#sign-in').css('display', 'none');
     let name = $('#username').prop('value');
     let newKey = firebase.database().ref().child('users').push().key;
-    console.log(name)
     setUserData(name);
     });
 })
