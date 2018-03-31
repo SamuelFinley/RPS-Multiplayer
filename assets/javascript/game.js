@@ -34,7 +34,21 @@ $(document).ready(() => {
 
   window.onload = start ();
 
+  function reset () {
+    matchmaking = false;
+    let userRef = database.ref('users/' + gameObj.userId);
+    userRef.update({
+      isWaiting: false,
+      inGame: false,
+    }).catch((err) => {
+      console.log(`Error setting db values -- ${err}`);
+    });
+  }
+
   function findGame (userId) {
+    gameObj.gId = '';
+    gameObj.player = '';
+    gameObj.oppt = '';
     let ref = database.ref('users');
     let userRef = database.ref('users/' + userId);
     userRef.update({
@@ -72,13 +86,14 @@ $(document).ready(() => {
   userRef.on("child_changed", function(snapshot) {
       console.log(snapshot.val());
       console.log(gameObj.oppt);
-      if (!snapshot.val() && gameObj.oppt !== 'player2') {
+      if (!snapshot.val() && gameObj.oppt !== 'player2' && matchmaking) {
         $('#btn-container > h1').html('connected!<br>Make your Pick!');
         $('#btn-container > h1').css('display', 'block');
         $('#btn0').css('display', 'none');
         $('#btn1, #btn2, #btn3').prop('disabled', false);
         gameObj.player = 'player2';
         gameObj.oppt = 'player1';
+        //userRef.off();
       }
 
     });
@@ -98,7 +113,6 @@ $(document).ready(() => {
       loss: 0,
       inGame: false,
       username: name,
-      choice: ''
     });
   }
 
@@ -141,6 +155,7 @@ $(document).ready(() => {
         game(choice, data.val().choice);
       }
     })
+    console.log(gameObj.player);
     ref2.child(gameObj.player).on("child_changed", function(data) {
       console.log(data.val());
       $('#btn-container > h1').html(data.val());
@@ -153,12 +168,18 @@ $(document).ready(() => {
       case (data === 'You Win!') :
       win++
       $('#footer').html('wins: ' + win + '    Losses: ' + loss);
+      $('#btn0').css('display', 'block');
+      reset ();
       break;
       case (data === 'You Lose!') :
       loss++
       $('#footer').html('wins: ' + win + '    Losses: ' + loss);
+      $('#btn0').css('display', 'block');
+      reset ();
       break;
       case (data === 'You Tied!') :
+      $('#btn0').css('display', 'block');
+      reset ();
       break;
     }
   }
@@ -264,6 +285,7 @@ $(document).ready(() => {
     //$('#btn-container').css('display', '-webkit-flex');
     $('#btn-container > h1').html('Finding Match...');
     $('#btn-container > h1').css('display', 'block');
+    matchmaking = true;
     findGame(gameObj.userId);
   })
 
