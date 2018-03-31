@@ -15,9 +15,9 @@ $(document).ready(() => {
     userId: '',
     player: '',
     oppt: '',
-    inGame: '',
   }
 
+  let matchmaking = false;
   let win = 0;
   let loss = 0;
 
@@ -41,10 +41,10 @@ $(document).ready(() => {
       isWaiting: true
     });
     let ordering = ref.orderByChild("isWaiting");
-    ordering.on("child_changed", function(snapshot) {
+    ordering.once("child_changed", function(snapshot) {
       const theyWait = snapshot.val();
-      console.log(theyWait);
-      if (theyWait.isWaiting && theyWait.Id !== userId) {
+      //console.log(theyWait);
+      if (theyWait.isWaiting && theyWait.Id !== userId && !theyWait.inGame) {
         let p2Ref = database.ref('users/' + theyWait.Id);
         setGameData(userId, theyWait.Id);
         $('#btn0').css('display', 'none');
@@ -68,8 +68,11 @@ $(document).ready(() => {
           console.log(`Error setting db values -- ${err}`);
         });
       }
-      if (theyWait.Id === userId && !theyWait.isWaiting && theyWait.inGame && !gameObj.player) {
-        console.log('here');
+  });
+  userRef.on("child_changed", function(snapshot) {
+      console.log(snapshot.val());
+      console.log(gameObj.oppt);
+      if (!snapshot.val() && gameObj.oppt !== 'player2') {
         $('#btn-container > h1').html('connected!<br>Make your Pick!');
         $('#btn-container > h1').css('display', 'block');
         $('#btn0').css('display', 'none');
@@ -77,7 +80,8 @@ $(document).ready(() => {
         gameObj.player = 'player2';
         gameObj.oppt = 'player1';
       }
-  });
+
+    });
   }
 
 
@@ -257,8 +261,9 @@ $(document).ready(() => {
 
   $('#btn0').click(() => {
     $('#btn0').css('display', 'none');
-    $('#btn-container').css('display', '-webkit-flex');
+    //$('#btn-container').css('display', '-webkit-flex');
     $('#btn-container > h1').html('Finding Match...');
+    $('#btn-container > h1').css('display', 'block');
     findGame(gameObj.userId);
   })
 
